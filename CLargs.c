@@ -37,6 +37,13 @@ void defaultHelpCallback(const CL_Schema schema) {
                     argSpacingLength += snprintf(NULL, 0, "(%d..%d)", schema[i].intOptions.minValue, schema[i].intOptions.maxValue);
                 }
                 break;
+            case DOUBLE:
+                if (schema[i].doubleOptions.minValue == 0.0 && schema[i].doubleOptions.maxValue == 0.0) {
+                    argSpacingLength += 6;
+                } else {
+                    argSpacingLength += snprintf(NULL, 0, "(%f..%f)", schema[i].doubleOptions.minValue, schema[i].doubleOptions.maxValue);
+                }
+                break;
             case END:
             case HELP:
             case BOOLEAN:
@@ -67,11 +74,17 @@ void defaultHelpCallback(const CL_Schema schema) {
                 break;
             case INT:
                 if (schema[i].intOptions.minValue == 0 && schema[i].intOptions.maxValue == 0) {
-                    spaceNeeded += printf(" (num)");
+                    spaceNeeded += printf(" (int)");
                 } else {
                     spaceNeeded += printf(" (%d..%d)", schema[i].intOptions.minValue, schema[i].intOptions.maxValue);
                 }
                 break;
+            case DOUBLE:
+                if (schema[i].doubleOptions.minValue == 0.0 && schema[i].doubleOptions.maxValue == 0.0) {
+                    spaceNeeded += printf(" (num)");
+                } else {
+                    spaceNeeded += printf(" (%f..%f)", schema[i].doubleOptions.minValue, schema[i].doubleOptions.maxValue);
+                }
             case END:
             case HELP:
             case BOOLEAN:
@@ -109,10 +122,10 @@ CL_Args CL_parse(int argc, char* argv[], const CL_Schema schema) {
     // Define args object to return
     CL_Args args = {
         .path = argc > 0 ? argv[0] : "",
-        .options = calloc(option_cap, sizeof(CL_FlagOption)),
-        .values = calloc(value_cap, sizeof(char**)),
-        .value_count = 0,
         .option_count = 0,
+        .value_count = 0,
+        .options = calloc(option_cap, sizeof(CL_FlagOption)),
+        .values = calloc(value_cap, sizeof(char*)),
     };
 
     if (!args.options || !args.values) {
@@ -122,7 +135,7 @@ CL_Args CL_parse(int argc, char* argv[], const CL_Schema schema) {
 
     // Add the schema options as unset in the args
     if (schema != NULL) {
-        for (; args.option_count < option_cap; args.option_count++) {
+        while (args.option_count < option_cap) {
             CL_FlagOption option = {
                 .flag = schema[args.option_count].name,
             };
@@ -135,12 +148,15 @@ CL_Args CL_parse(int argc, char* argv[], const CL_Schema schema) {
                     option.value.string = "";
                     break;
                 case INT:
-                    option.value.number = INT32_MIN;
+                    option.value.integer = INT32_MIN;
+                    break;
+                case DOUBLE:
+                    option.value.number = NAN;
                     break;
                 case END:  // Unreachable
                     break;
             }
-            args.options[args.option_count] = option;
+            args.options[args.option_count++] = option;
         }
     }
 
@@ -226,15 +242,38 @@ CL_Args CL_parse(int argc, char* argv[], const CL_Schema schema) {
                             }
                         }
                         // Convert the actual number
-                        int32_t numeric_value = (int32_t)strtol(string_value, NULL, base) * sign;
+                        int32_t integer_value = (int32_t)strtol(string_value, NULL, base) * sign;
                         // Check if it is out of the range provided by the schema
                         if (schema[flag_index].intOptions.minValue != 0 || schema[flag_index].intOptions.maxValue != 0) {
-                            if (numeric_value < schema[flag_index].intOptions.minValue || numeric_value > schema[flag_index].intOptions.maxValue) {
+                            if (integer_value < schema[flag_index].intOptions.minValue || integer_value > schema[flag_index].intOptions.maxValue) {
                                 parseErrorCallback(schema[flag_index].name, "Value out of range");
                             }
                         }
 
+                        args.options[flag_index].value.integer = integer_value;
+                        break;
+                    case DOUBLE:
+                        // If the next arg is not a flag, treat it as the value
+                        if (a < argc - 1 && (argv[a + 1][0] != '-' || argv[a + 1][1] != '-')) {
+                            string_value = argv[++a];
+                        }
+                        if (string_value[0] == 0) {
+                            parseErrorCallback(schema[flag_index].name, "Expected value after flag");
+                        }
+                        // Convert the actual number
+                        double numeric_value = strtod(string_value, NULL);
+                        // Check if it is invalid
+                        if (!isfinite(numeric_value)) {
+                            parseErrorCallback(schema[flag_index].name, "Invalid value");
+                        }
+                        // Check if it is out of the range provided by the schema
+                        if (schema[flag_index].doubleOptions.minValue != 0.0 || schema[flag_index].doubleOptions.maxValue != 0.0) {
+                            if (numeric_value < schema[flag_index].doubleOptions.minValue || numeric_value > schema[flag_index].doubleOptions.maxValue) {
+                                parseErrorCallback(schema[flag_index].name, "Value out of range");
+                            }
+                        }
                         args.options[flag_index].value.number = numeric_value;
+                        break;
                     case END:  // Unreachable
                         break;
                 }

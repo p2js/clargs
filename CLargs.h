@@ -5,6 +5,7 @@
 extern "C" {
 #endif
 
+#include <math.h>
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -39,6 +40,17 @@ extern "C" {
             .minValue = _min,                \
             .maxValue = _max,                \
         }                                    \
+    }
+// Double option (can have min and max)
+#define OPTION_DOUBLE(_name, _desc, _min, _max) \
+    {                                           \
+        .name = _name,                          \
+        .type = DOUBLE,                         \
+        .description = _desc,                   \
+        .doubleOptions = {                      \
+            .minValue = _min,                   \
+            .maxValue = _max,                   \
+        }                                       \
     }
 // Optional option (may optionally be followed by a value)
 #define OPTION_OPTIONAL(_name, _desc) \
@@ -80,6 +92,7 @@ typedef enum {
     BOOLEAN,
     STRING,
     INT,
+    DOUBLE,
 } CL_OptionType;
 
 // Enum representing an option definition in the schema
@@ -93,6 +106,10 @@ typedef struct {
             int32_t maxValue;
         } intOptions;
         struct {
+            double minValue;
+            double maxValue;
+        } doubleOptions;
+        struct {
             bool optional;
             char* oneOf[CL_MAX_ONEOF_OPTIONS];
         } strOptions;
@@ -105,13 +122,14 @@ typedef CL_Option CL_Schema[];
 // PARSER
 
 // Helper to check if the flag value has not been set in the args
-#define CL_NOTSET(x) _Generic((x), bool: !x, char*: x[0] == '\0', int32_t: x == INT32_MIN)
+#define CL_NOTSET(x) _Generic((x), bool: !x, char*: x[0] == '\0', int32_t: x == INT32_MIN, double: isnan(x))
 
 // Union representing the possible values of an option flag
 typedef union {
     bool boolean;
-    int32_t number;
+    int32_t integer;
     char* string;
+    double number;
 } CL_FlagValue;
 
 // Struct representing an option flag and its value
