@@ -148,13 +148,13 @@ CL_Args CL_parse(int argc, char* argv[], const CL_Schema schema) {
         if (argv[a][0] == '-' && argv[a][1] == '-') {
             // Is a flag
             if (schema != NULL) {
-                size_t flag_index = -1;
+                size_t flag_index = SIZE_MAX;
                 for (int i = 0; schema[i].type != END; i++) {
                     if (strcmp(argv[a] + 2, schema[i].name) == 0) {
                         flag_index = i;
                     }
                 }
-                if (flag_index == -1) {
+                if (flag_index == SIZE_MAX) {
                     parseErrorCallback(argv[a], "Unknown option");
                     continue;
                 }
@@ -189,7 +189,49 @@ CL_Args CL_parse(int argc, char* argv[], const CL_Schema schema) {
                         args.options[flag_index].value.string = string_value;
                         break;
                     case INT:
-                        parseErrorCallback(argv[a], "todo");
+                        // If the next arg is not a flag, treat it as the value
+                        if (a < argc - 1 && (argv[a + 1][0] != '-' || argv[a + 1][1] != '-')) {
+                            string_value = argv[++a];
+                        }
+                        if (string_value[0] == 0) {
+                            parseErrorCallback(schema[flag_index].name, "Expected value after flag");
+                        }
+                        // Compute the specified base and sign
+                        int base = 10;
+                        int32_t sign = 1;
+                        if (string_value[0] == '-') {
+                            sign = -1;
+                            string_value = string_value + 1;
+                        }
+                        if (string_value[0] == '0') {
+                            switch (string_value[1]) {
+                                case 'x':
+                                case 'X':
+                                    base = 16;
+                                    string_value = string_value + 2;
+                                    break;
+                                case 'b':
+                                case 'B':
+                                    base = 2;
+                                    string_value = string_value + 2;
+                                    break;
+                                case 'o':
+                                case 'O':
+                                    base = 8;
+                                    string_value = string_value + 2;
+                                    break;
+                            }
+                        }
+                        // Convert the actual number
+                        int32_t numeric_value = (int32_t)strtol(string_value, NULL, base) * sign;
+                        // Check if it is out of the range provided by the schema
+                        if (schema[flag_index].intOptions.minValue != 0 || schema[flag_index].intOptions.maxValue != 0) {
+                            if (numeric_value < schema[flag_index].intOptions.minValue || numeric_value > schema[flag_index].intOptions.maxValue) {
+                                parseErrorCallback(schema[flag_index].name, "Value out of range");
+                            }
+                        }
+
+                        args.options[flag_index].value.number = numeric_value;
                     case END:  // Unreachable
                         break;
                 }

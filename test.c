@@ -14,6 +14,7 @@ int main(int argc, char* argv[]) {
     CL_Args args = CL_parse(argc, argv, schema);
 
     printf("Verbose Mode: %s\n", CL_flag("verbose", args).boolean ? "on" : "off");
+    printf("Random Value: %d\n", CL_flag("randomvalue", args).number);
     printf("Smart Mode: %s\n", CL_flag("smartMode", args).string);
     printf("Mode: %s\n", CL_flag("mode", args).string);
     printf("Roulette Color: %s\n", CL_flag("rouletteColor", args).string);
