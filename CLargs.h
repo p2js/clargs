@@ -73,6 +73,7 @@ extern "C" {
             .oneOf = {NULL},        \
         }                           \
     }
+// Enum representing the different types of options
 typedef enum {
     END,
     HELP,
@@ -81,6 +82,7 @@ typedef enum {
     INT,
 } CL_OptionType;
 
+// Enum representing an option definition in the schema
 typedef struct {
     const char* name;
     const CL_OptionType type;
@@ -97,6 +99,7 @@ typedef struct {
     };
 } CL_Option;
 
+// Type representing the schema (array of options)
 typedef CL_Option CL_Schema[];
 
 // PARSER
@@ -128,11 +131,11 @@ typedef struct {
 
 // Type representing parse error callback function
 typedef void (*CL_ParseErrorCallback)(const char* flag, char* msg);
-// Function to set a custom parse error callback function
+// Set a custom parse error callback function
 void CL_setParseErrorCallback(CL_ParseErrorCallback cb);
 // Type representing callback function for the help menu (given a schema)
 typedef void (*CL_HelpCallback)(const CL_Schema schema);
-// Function to set a custom help menu callback
+// Set a custom help menu callback
 void CL_setHelpCallback(CL_HelpCallback cb);
 
 // Parse command-line arguments

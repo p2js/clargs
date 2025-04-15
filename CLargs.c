@@ -120,7 +120,7 @@ CL_Args CL_parse(int argc, char* argv[], const CL_Schema schema) {
         abort();
     }
 
-    // Add the schema options as not set in the args
+    // Add the schema options as unset in the args
     if (schema != NULL) {
         for (; args.option_count < option_cap; args.option_count++) {
             CL_FlagOption option = {
@@ -144,10 +144,12 @@ CL_Args CL_parse(int argc, char* argv[], const CL_Schema schema) {
         }
     }
 
+    // Process user arguments
     for (int a = 1; a < argc; a++) {
         if (argv[a][0] == '-' && argv[a][1] == '-') {
             // Is a flag
             if (schema != NULL) {
+                // Schema defined, find option in schema
                 size_t flag_index = SIZE_MAX;
                 for (int i = 0; schema[i].type != END; i++) {
                     if (strcmp(argv[a] + 2, schema[i].name) == 0) {
@@ -158,6 +160,7 @@ CL_Args CL_parse(int argc, char* argv[], const CL_Schema schema) {
                     parseErrorCallback(argv[a], "Unknown option");
                     continue;
                 }
+                // Process the flag based on its type
                 char* string_value = "";
                 switch (schema[flag_index].type) {
                     case HELP:
@@ -287,4 +290,9 @@ CL_FlagValue CL_flag(char* flag, CL_Args args) {
     // Not found; either not defined in the schema, or no schema was provided when parsing
     // return empty string value
     return (CL_FlagValue){.string = ""};
+}
+
+void CL_freeArgs(CL_Args args) {
+    free(args.options);
+    free(args.values);
 }

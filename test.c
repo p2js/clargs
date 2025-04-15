@@ -18,4 +18,6 @@ int main(int argc, char* argv[]) {
     printf("Smart Mode: %s\n", CL_flag("smartMode", args).string);
     printf("Mode: %s\n", CL_flag("mode", args).string);
     printf("Roulette Color: %s\n", CL_flag("rouletteColor", args).string);
+
+    CL_freeArgs(args);
 }
