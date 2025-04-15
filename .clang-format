@@ -1,0 +1,5 @@
+BasedOnStyle: Google
+IndentWidth: 4
+AlignAfterOpenBracket: DontAlign
+AllowShortFunctionsOnASingleLine: Empty
+ColumnLimit: 0
