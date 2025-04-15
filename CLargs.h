@@ -21,7 +21,7 @@ extern "C" {
         }                    \
     }
 // Help option
-#define OPTION_HELP() {.name = "help", .type = HELP, .description = "display the help menu"}
+#define OPTION_HELP() {.name = "help", .type = HELP, .description = "Display the help menu"}
 // Boolean flag option (either there or not)
 #define OPTION_BOOLEAN(_name, _desc) \
     {                                \

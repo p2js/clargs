@@ -16,30 +16,25 @@ void defaultParseErrorCallback(const char* flag, char* msg) {
 
 // Default behaviour for --help (if enabled in schema)
 void defaultHelpCallback(const CL_Schema schema) {
-    printf("Options:\n");
-    for (int i = 0; schema[i].type != END; i++) {
-        printf("\t--%s", schema[i].name);
+    // Compute the maximum spacing needed for aligning help commands
+    uint32_t maxSpacingLength = 0;
+    for (size_t i = 0; schema[i].type != END; i++) {
+        uint32_t argSpacingLength = strlen(schema[i].name);
         switch (schema[i].type) {
             case STRING:
                 if (schema[i].strOptions.oneOf[0]) {
-                    printf(" (");
-                    int o = 0;
-                    while (schema[i].strOptions.oneOf[o + 1]) {
-                        printf("%s/", schema[i].strOptions.oneOf[o++]);
+                    argSpacingLength += 1;
+                    for (int o = 0; schema[i].strOptions.oneOf[o]; o++) {
+                        argSpacingLength += strlen(schema[i].strOptions.oneOf[o]) + 1;
                     }
-                    printf("%s", schema[i].strOptions.oneOf[o]);
-                    printf(")");
-                } else if (schema[i].strOptions.optional) {
-                    printf(" [value]");
                 } else {
-                    printf(" (value)");
-                };
-                break;
+                    argSpacingLength += 8;
+                }
             case INT:
                 if (schema[i].intOptions.minValue == schema[i].intOptions.maxValue == 0) {
-                    printf(" (num)");
+                    argSpacingLength = 6;
                 } else {
-                    printf("(%d..%d)", schema[i].intOptions.minValue, schema[i].intOptions.maxValue);
+                    argSpacingLength += snprintf(NULL, 0, "(%d..%d)", schema[i].intOptions.minValue, schema[i].intOptions.maxValue);
                 }
                 break;
             case END:
@@ -47,7 +42,43 @@ void defaultHelpCallback(const CL_Schema schema) {
             case BOOLEAN:
                 break;
         }
-        printf("\t%s\n", schema[i].description);
+        if (argSpacingLength > maxSpacingLength) {
+            maxSpacingLength = argSpacingLength;
+        }
+    }
+
+    printf("Options:\n");
+    for (size_t i = 0; schema[i].type != END; i++) {
+        int spaceNeeded = printf("\t--%s", schema[i].name) - 3;
+        switch (schema[i].type) {
+            case STRING:
+                if (schema[i].strOptions.oneOf[0]) {
+                    spaceNeeded += printf(" (");
+                    size_t o = 0;
+                    while (schema[i].strOptions.oneOf[o + 1]) {
+                        spaceNeeded += printf("%s/", schema[i].strOptions.oneOf[o++]);
+                    }
+                    spaceNeeded += printf("%s)", schema[i].strOptions.oneOf[o]);
+                } else if (schema[i].strOptions.optional) {
+                    spaceNeeded += printf(" [value]");
+                } else {
+                    spaceNeeded += printf(" (value)");
+                };
+                break;
+            case INT:
+                if (schema[i].intOptions.minValue == schema[i].intOptions.maxValue == 0) {
+                    spaceNeeded += printf(" (num)");
+                } else {
+                    spaceNeeded += printf("(%d..%d)", schema[i].intOptions.minValue, schema[i].intOptions.maxValue);
+                }
+                break;
+            case END:
+            case HELP:
+            case BOOLEAN:
+                break;
+        }
+        printf("%*s", maxSpacingLength - spaceNeeded, "");
+        printf("%s\n", schema[i].description);
     }
     exit(0);
 }
