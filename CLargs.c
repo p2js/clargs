@@ -31,8 +31,8 @@ void defaultHelpCallback(const CL_Schema schema) {
                     argSpacingLength += 8;
                 }
             case INT:
-                if (schema[i].intOptions.minValue == schema[i].intOptions.maxValue == 0) {
-                    argSpacingLength = 6;
+                if (schema[i].intOptions.minValue == 0 && schema[i].intOptions.maxValue == 0) {
+                    argSpacingLength += 6;
                 } else {
                     argSpacingLength += snprintf(NULL, 0, "(%d..%d)", schema[i].intOptions.minValue, schema[i].intOptions.maxValue);
                 }
@@ -66,10 +66,10 @@ void defaultHelpCallback(const CL_Schema schema) {
                 };
                 break;
             case INT:
-                if (schema[i].intOptions.minValue == schema[i].intOptions.maxValue == 0) {
+                if (schema[i].intOptions.minValue == 0 && schema[i].intOptions.maxValue == 0) {
                     spaceNeeded += printf(" (num)");
                 } else {
-                    spaceNeeded += printf("(%d..%d)", schema[i].intOptions.minValue, schema[i].intOptions.maxValue);
+                    spaceNeeded += printf(" (%d..%d)", schema[i].intOptions.minValue, schema[i].intOptions.maxValue);
                 }
                 break;
             case END:
