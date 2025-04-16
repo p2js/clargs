@@ -56,8 +56,13 @@ bool defaultHelpCallback(const CL_Schema schema) {
 
     printf("Options:\n");
     for (size_t i = 0; schema[i].type != END; i++) {
+        if (schema[i].abbr) {
+            printf(" -%c, ", schema[i].abbr);
+        } else {
+            printf("     ");
+        }
         // Print flag name
-        int spaceNeeded = printf("\t--%s", schema[i].name) - 3;  // Keep track of space needed to reach max width
+        int spaceNeeded = printf("--%s", schema[i].name) - 2;  // Keep track of space needed to reach max width
         // Print hint for flag value, if necessary
         switch (schema[i].type) {
             case STRING:
