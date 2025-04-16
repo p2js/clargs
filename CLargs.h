@@ -24,66 +24,72 @@ extern "C" {
 // Help option
 #define OPTION_HELP() {.name = "help", .type = HELP, .description = "Display the help menu"}
 // Boolean flag option (either there or not)
-#define OPTION_BOOLEAN(_name, _desc) \
-    {                                \
-        .name = _name,               \
-        .type = BOOLEAN,             \
-        .description = _desc,        \
+#define OPTION_BOOLEAN(_name, _abbr, _desc) \
+    {                                       \
+        .name = _name,                      \
+        .abbr = _abbr,                      \
+        .type = BOOLEAN,                    \
+        .description = _desc,               \
     }
 // Integer option (can have min and max)
-#define OPTION_INT(_name, _desc, _min, _max) \
-    {                                        \
-        .name = _name,                       \
-        .type = INT,                         \
-        .description = _desc,                \
-        .intOptions = {                      \
-            .minValue = _min,                \
-            .maxValue = _max,                \
-        }                                    \
+#define OPTION_INT(_name, _abbr, _desc, _min, _max) \
+    {                                               \
+        .name = _name,                              \
+        .abbr = _abbr,                              \
+        .type = INT,                                \
+        .description = _desc,                       \
+        .intOptions = {                             \
+            .minValue = _min,                       \
+            .maxValue = _max,                       \
+        }                                           \
     }
 // Double option (can have min and max)
-#define OPTION_DOUBLE(_name, _desc, _min, _max) \
-    {                                           \
-        .name = _name,                          \
-        .type = DOUBLE,                         \
-        .description = _desc,                   \
-        .doubleOptions = {                      \
-            .minValue = _min,                   \
-            .maxValue = _max,                   \
-        }                                       \
+#define OPTION_DOUBLE(_name, _abbr, _desc, _min, _max) \
+    {                                                  \
+        .name = _name,                                 \
+        .abbr = _abbr,                                 \
+        .type = DOUBLE,                                \
+        .description = _desc,                          \
+        .doubleOptions = {                             \
+            .minValue = _min,                          \
+            .maxValue = _max,                          \
+        }                                              \
     }
 // Optional option (may optionally be followed by a value)
-#define OPTION_OPTIONAL(_name, _desc) \
-    {                                 \
-        .name = _name,                \
-        .type = STRING,               \
-        .description = _desc,         \
-        .strOptions = {               \
-            .optional = true,         \
-            .oneOf = {NULL},          \
-        }                             \
+#define OPTION_OPTIONAL(_name, _abbr, _desc) \
+    {                                        \
+        .name = _name,                       \
+        .abbr = _abbr,                       \
+        .type = STRING,                      \
+        .description = _desc,                \
+        .strOptions = {                      \
+            .optional = true,                \
+            .oneOf = {NULL},                 \
+        }                                    \
     }
 // "One of" option (may be one of the provided choices)
-#define OPTION_ONEOF(_name, _desc, ...) \
-    {                                   \
-        .name = _name,                  \
-        .type = STRING,                 \
-        .description = _desc,           \
-        .strOptions = {                 \
-            .optional = false,          \
-            .oneOf = {__VA_ARGS__},     \
-        }                               \
+#define OPTION_ONEOF(_name, _abbr, _desc, ...) \
+    {                                          \
+        .name = _name,                         \
+        .abbr = _abbr,                         \
+        .type = STRING,                        \
+        .description = _desc,                  \
+        .strOptions = {                        \
+            .optional = false,                 \
+            .oneOf = {__VA_ARGS__},            \
+        }                                      \
     }
 // String option
-#define OPTION_STRING(_name, _desc) \
-    {                               \
-        .name = _name,              \
-        .type = STRING,             \
-        .description = _desc,       \
-        .strOptions = {             \
-            .optional = false,      \
-            .oneOf = {NULL},        \
-        }                           \
+#define OPTION_STRING(_name, _abbr, _desc) \
+    {                                      \
+        .name = _name,                     \
+        .abbr = _abbr,                     \
+        .type = STRING,                    \
+        .description = _desc,              \
+        .strOptions = {                    \
+            .optional = false,             \
+            .oneOf = {NULL},               \
+        }                                  \
     }
 // Enum representing the different types of options
 typedef enum {
@@ -98,6 +104,7 @@ typedef enum {
 // Enum representing an option definition in the schema
 typedef struct {
     const char* name;
+    const char abbr;
     const CL_OptionType type;
     const char* description;
     union {
@@ -120,9 +127,6 @@ typedef struct {
 typedef CL_Option CL_Schema[];
 
 // PARSER
-
-// Helper to check if the flag value has not been set in the args
-#define CL_NOTSET(x) _Generic((x), bool: !x, char*: x[0] == '\0', int32_t: x == INT32_MIN, double: isnan(x))
 
 // Union representing the possible values of an option flag
 typedef union {
@@ -151,8 +155,10 @@ typedef struct {
 typedef void (*CL_ParseErrorCallback)(const char* flag, char* msg);
 // Set a custom parse error callback function
 void CL_setParseErrorCallback(CL_ParseErrorCallback cb);
-// Type representing callback function for the help menu (given a schema)
-typedef void (*CL_HelpCallback)(const CL_Schema schema);
+// Type representing callback function for the help menu (given a schema).
+//
+// Returns true if the program should exit after displaying the help menu
+typedef bool (*CL_HelpCallback)(const CL_Schema schema);
 // Set a custom help menu callback
 void CL_setHelpCallback(CL_HelpCallback cb);
 
@@ -160,7 +166,7 @@ void CL_setHelpCallback(CL_HelpCallback cb);
 CL_Args CL_parse(int argc, char* argv[], const CL_Schema schema);
 // Get the value of a CL_Args flag
 CL_FlagValue CL_flag(char* flag, CL_Args args);
-// Free a CL_Args object
+// Free the heap allocations of CL_Args object
 void CL_freeArgs(CL_Args args);
 
 #ifdef __cplusplus

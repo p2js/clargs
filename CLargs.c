@@ -15,7 +15,7 @@ void defaultParseErrorCallback(const char* flag, char* msg) {
 }
 
 // Default behaviour for --help (if enabled in schema)
-void defaultHelpCallback(const CL_Schema schema) {
+bool defaultHelpCallback(const CL_Schema schema) {
     // Compute the maximum spacing needed for aligning flag descriptions
     uint32_t maxSpacingLength = 0;
     for (size_t i = 0; schema[i].type != END; i++) {
@@ -41,7 +41,7 @@ void defaultHelpCallback(const CL_Schema schema) {
                 if (schema[i].doubleOptions.minValue == 0.0 && schema[i].doubleOptions.maxValue == 0.0) {
                     argSpacingLength += 6;  // (num)
                 } else {
-                    argSpacingLength += snprintf(NULL, 0, " (%f..%f)", schema[i].doubleOptions.minValue, schema[i].doubleOptions.maxValue);
+                    argSpacingLength += snprintf(NULL, 0, " (%.2f..%.2f)", schema[i].doubleOptions.minValue, schema[i].doubleOptions.maxValue);
                 }
                 break;
             case END:
@@ -85,7 +85,7 @@ void defaultHelpCallback(const CL_Schema schema) {
                 if (schema[i].doubleOptions.minValue == 0.0 && schema[i].doubleOptions.maxValue == 0.0) {
                     spaceNeeded += printf(" (num)");
                 } else {
-                    spaceNeeded += printf(" (%f..%f)", schema[i].doubleOptions.minValue, schema[i].doubleOptions.maxValue);
+                    spaceNeeded += printf(" (%.2f..%.2f)", schema[i].doubleOptions.minValue, schema[i].doubleOptions.maxValue);
                 }
             case END:
             case HELP:
@@ -95,7 +95,8 @@ void defaultHelpCallback(const CL_Schema schema) {
         // Pad with space left and print description
         printf("%*s%s\n", maxSpacingLength - spaceNeeded, "", schema[i].description);
     }
-    exit(0);
+
+    return true;
 }
 
 CL_ParseErrorCallback parseErrorCallback = defaultParseErrorCallback;
@@ -112,8 +113,10 @@ CL_Args CL_parse(int argc, char* argv[], const CL_Schema schema) {
     size_t value_cap = DEFAULT_VALUE_CAP;
     size_t option_cap = 0;
 
+    bool schemaDefined = schema != NULL;
+
     // Count options in schema (if defined)
-    if (schema != NULL) {
+    if (schemaDefined) {
         while (schema[option_cap].type != END) {
             option_cap++;
         };
@@ -136,7 +139,7 @@ CL_Args CL_parse(int argc, char* argv[], const CL_Schema schema) {
     }
 
     // Add the schema options as unset in the args
-    if (schema != NULL) {
+    if (schemaDefined) {
         while (args.option_count < option_cap) {
             CL_FlagOption option = {
                 .flag = schema[args.option_count].name,
@@ -164,16 +167,50 @@ CL_Args CL_parse(int argc, char* argv[], const CL_Schema schema) {
 
     // Process user arguments
     for (int a = 1; a < argc; a++) {
-        if (argv[a][0] == '-' && argv[a][1] == '-') {
+        if (argv[a][0] == '-' && argv[a][1] != '\0' && (schemaDefined || argv[a][1] == '-')) {
             // Is a flag
-            if (schema != NULL) {
+            if (schemaDefined) {
                 // Schema defined, find option in schema
                 size_t flag_index = SIZE_MAX;
-                for (int i = 0; schema[i].type != END; i++) {
-                    if (strcmp(argv[a] + 2, schema[i].name) == 0) {
-                        flag_index = i;
+                // Check if the flag is in short mode
+                if (argv[a][1] != '-') {
+                    // If there is more than 1 short flag, look for them all
+                    if (argv[a][2] != '\0') {
+                        for (int f = 1; argv[a][f] != '\0'; f++) {
+                            for (int i = 0; schema[i].type != END; i++) {
+                                if (argv[a][f] == schema[i].abbr) {
+                                    // Grouped flags must be boolean (which will then be set to true)
+                                    if (schema[i].type != BOOLEAN) {
+                                        char flagString[2] = {argv[a][f], '\0'};
+                                        parseErrorCallback(flagString, "Grouped flag not a boolean option");
+                                        continue;
+                                    }
+                                    args.options[i].value.boolean = true;
+                                    break;
+                                }
+                            }
+                        }
+                        // Continue to next flag
+                        continue;
+                    } else {
+                        // Just one flag, look for its abbreviation
+                        for (int i = 0; schema[i].type != END; i++) {
+                            if (argv[a][1] == schema[i].abbr) {
+                                flag_index = i;
+                                break;
+                            }
+                        }
+                    }
+                } else {
+                    // Long mode, look for the flag using strcmp
+                    for (int i = 0; schema[i].type != END; i++) {
+                        if (strcmp(argv[a] + 2, schema[i].name) == 0) {
+                            flag_index = i;
+                            break;
+                        }
                     }
                 }
+                // Check if the flag has been found
                 if (flag_index == SIZE_MAX) {
                     parseErrorCallback(argv[a], "Unknown option");
                     continue;
@@ -182,7 +219,9 @@ CL_Args CL_parse(int argc, char* argv[], const CL_Schema schema) {
                 char* string_value = "";
                 switch (schema[flag_index].type) {
                     case HELP:
-                        helpCallback(schema);
+                        if (helpCallback(schema)) {
+                            exit(0);
+                        };
                         break;
                     case BOOLEAN:
                         args.options[flag_index].value.boolean = true;
@@ -194,6 +233,7 @@ CL_Args CL_parse(int argc, char* argv[], const CL_Schema schema) {
                         }
                         if (string_value[0] == 0 && !schema[flag_index].strOptions.optional) {
                             parseErrorCallback(schema[flag_index].name, "Expected value after flag");
+                            continue;
                         }
                         if (schema[flag_index].strOptions.oneOf[0]) {
                             bool equalsOneOfOptions = false;
@@ -205,6 +245,7 @@ CL_Args CL_parse(int argc, char* argv[], const CL_Schema schema) {
                             }
                             if (!equalsOneOfOptions) {
                                 parseErrorCallback(schema[flag_index].name, "invalid option");
+                                continue;
                             }
                         }
                         args.options[flag_index].value.string = string_value;
@@ -216,6 +257,7 @@ CL_Args CL_parse(int argc, char* argv[], const CL_Schema schema) {
                         }
                         if (string_value[0] == 0) {
                             parseErrorCallback(schema[flag_index].name, "Expected value after flag");
+                            continue;
                         }
                         // Compute the specified base and sign
                         int base = 10;
@@ -249,6 +291,7 @@ CL_Args CL_parse(int argc, char* argv[], const CL_Schema schema) {
                         if (schema[flag_index].intOptions.minValue != 0 || schema[flag_index].intOptions.maxValue != 0) {
                             if (integer_value < schema[flag_index].intOptions.minValue || integer_value > schema[flag_index].intOptions.maxValue) {
                                 parseErrorCallback(schema[flag_index].name, "Value out of range");
+                                continue;
                             }
                         }
 
@@ -261,17 +304,20 @@ CL_Args CL_parse(int argc, char* argv[], const CL_Schema schema) {
                         }
                         if (string_value[0] == 0) {
                             parseErrorCallback(schema[flag_index].name, "Expected value after flag");
+                            continue;
                         }
                         // Convert the actual number
                         double numeric_value = strtod(string_value, NULL);
                         // Check if it is invalid
                         if (!isfinite(numeric_value)) {
                             parseErrorCallback(schema[flag_index].name, "Invalid value");
+                            continue;
                         }
                         // Check if it is out of the range provided by the schema
                         if (schema[flag_index].doubleOptions.minValue != 0.0 || schema[flag_index].doubleOptions.maxValue != 0.0) {
                             if (numeric_value < schema[flag_index].doubleOptions.minValue || numeric_value > schema[flag_index].doubleOptions.maxValue) {
                                 parseErrorCallback(schema[flag_index].name, "Value out of range");
+                                continue;
                             }
                         }
                         args.options[flag_index].value.number = numeric_value;
