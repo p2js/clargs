@@ -1,5 +1,16 @@
-#ifndef __CLARGS_H__
-#define __CLARGS_H__
+/**
+ * CLargs.c
+ * Command-line argument parser
+ *
+ * Copyright (C) 2025 Alfio Tomarchio
+ * All rights reserved.
+ *
+ * Use of this source code is governed by a MIT-style license that can be found
+ * in the LICENSE file.
+ */
+
+#ifndef CLARGS_H
+#define CLARGS_H
 
 #ifdef __cplusplus
 extern "C" {
