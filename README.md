@@ -26,13 +26,15 @@ The `abbr` field defines an optional single-character flag name to be used as sh
 
 ### Parsing/retrieving options and values
 
-The options and values given when the program is started can be parsed and collected into a `CL_Args` object using `CL_parse(argc, argv, schema)`.
+The options and values given when the program is started can be parsed and collected into a `CL_Args` object using `CL_parse(argc, argv, schema)`, which must be freed at the end of the program using `CL_free(args)`. 
 
 The integer options accept different formats for integer values, namely starting with `0b`, `0o` or`0x` for binary, octal and hexadecimal values respectively.
 
 Boolean short-form options can be grouped, eg `-l` and `-a` can become `-la`.
 
 *Note: Without a schema, all options will be collected and their following value (if present) will be treated as a string. Short-form options will be ignored and treated as values.*
+
+Specific options can be grabbed from a `CL_Args` object using `CL_flag(flagname, args)` - This will be a union of all the possible types of value (boolean/string/integer/number), so it must be accessed according to the type defined in the schema.
 
 ### Custom parse error/help behaviour
 
