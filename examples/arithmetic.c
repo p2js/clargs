@@ -24,8 +24,8 @@ const CL_Schema schema = CL_DEFINESCHEMA(
 extern bool defaultHelpCallback(const CL_Schema schema);
 
 bool customHelpCallback(const CL_Schema schema) {
-    printf("Usage: multiply [options] x y\n");
-    printf("  Or : multiply -x (x) -y (y) [otherOptions]\n\n");
+    printf("Usage: arithmetic [options] x y\n");
+    printf("  Or : arithmetic -x (x) -y (y) [otherOptions]\n\n");
     defaultHelpCallback(schema);
     printf("\n Example program for the CLargs library.\nPerforms arithmetic operations on the provided floating point numbers.\n");
     return true;
