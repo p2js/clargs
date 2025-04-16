@@ -155,8 +155,11 @@ typedef struct {
 
 // Args struct returned by CL_parse
 typedef struct {
+    // Program name (argv[0])
     char* path;
+    // Number of options in array
     uint32_t option_count;
+    // Number of values (not associated with options) in array
     uint32_t value_count;
     CL_FlagOption* options;
     char** values;
