@@ -6,7 +6,7 @@
  * All rights reserved.
  *
  * Use of this source code is governed by a MIT-style license that can be found
- * in the LICENSE file.
+ * in the LICENSE file or at https://opensource.org/licenses/MIT.
  */
 
 #include "CLargs.h"
@@ -16,8 +16,8 @@
 #include <string.h>
 
 // Starting capacities for the growable arrays that store the values and options
-#define DEFAULT_VALUE_CAP 1
-#define DEFAULT_OPTIONS_CAP 4
+#define DEFAULT_VALUE_CAP 9
+#define DEFAULT_OPTIONS_CAP 9
 
 // Default behaviour for argument parse error
 void defaultParseErrorCallback(const char* flag, char* msg) {
