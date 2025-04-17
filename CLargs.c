@@ -167,13 +167,17 @@ CL_Args CL_parse(int argc, char* argv[], const CL_Schema schema) {
                     option.value.boolean = false;
                     break;
                 case STRING:
-                    option.value.string = "";
+                    if (schema[args.option_count].strOptions.oneOf[0]) {
+                        option.value.string = schema[args.option_count].strOptions.oneOf[0];
+                    } else {
+                        option.value.string = schema[args.option_count].strOptions.defaultValue;
+                    }
                     break;
                 case INT:
-                    option.value.integer = INT32_MIN;
+                    option.value.integer = schema[args.option_count].intOptions.defaultValue;
                     break;
                 case DOUBLE:
-                    option.value.number = NAN;
+                    option.value.number = schema[args.option_count].doubleOptions.defaultValue;
                     break;
                 case END:  // Unreachable
                     break;
@@ -392,8 +396,7 @@ CL_FlagValue CL_flag(char* flag, CL_Args args) {
     }
 
     // Not found; either not defined in the schema, or no schema was provided when parsing
-    // return empty string value
-    return (CL_FlagValue){.string = ""};
+    return (CL_FlagValue){.string = NULL};
 }
 
 void CL_free(CL_Args args) {

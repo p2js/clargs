@@ -42,40 +42,56 @@ extern "C" {
         .description = _desc,               \
     }
 // Integer option (can have min and max)
-#define OPTION_INT(_name, _abbr, _desc, _min, _max) \
-    {                                               \
-        .name = _name,                              \
-        .abbr = _abbr,                              \
-        .type = INT,                                \
-        .description = _desc,                       \
-        .intOptions = {                             \
-            .minValue = _min,                       \
-            .maxValue = _max,                       \
-        }                                           \
+#define OPTION_INT(_name, _abbr, _desc, _min, _max, _default) \
+    {                                                         \
+        .name = _name,                                        \
+        .abbr = _abbr,                                        \
+        .type = INT,                                          \
+        .description = _desc,                                 \
+        .intOptions = {                                       \
+            .minValue = _min,                                 \
+            .maxValue = _max,                                 \
+            .defaultValue = _default                          \
+        }                                                     \
     }
 // Double option (can have min and max)
-#define OPTION_DOUBLE(_name, _abbr, _desc, _min, _max) \
+#define OPTION_DOUBLE(_name, _abbr, _desc, _min, _max, _default) \
+    {                                                            \
+        .name = _name,                                           \
+        .abbr = _abbr,                                           \
+        .type = DOUBLE,                                          \
+        .description = _desc,                                    \
+        .doubleOptions = {                                       \
+            .minValue = _min,                                    \
+            .maxValue = _max,                                    \
+            .defaultValue = _default                             \
+        }                                                        \
+    }
+// String option
+#define OPTION_STRING(_name, _abbr, _desc, _default) \
+    {                                                \
+        .name = _name,                               \
+        .abbr = _abbr,                               \
+        .type = STRING,                              \
+        .description = _desc,                        \
+        .strOptions = {                              \
+            .optional = false,                       \
+            .oneOf = {NULL},                         \
+            .defaultValue = _default                 \
+        }                                            \
+    }
+// Optional option (may optionally be followed by a value)
+#define OPTION_OPTIONAL(_name, _abbr, _desc, _default) \
     {                                                  \
         .name = _name,                                 \
         .abbr = _abbr,                                 \
-        .type = DOUBLE,                                \
+        .type = STRING,                                \
         .description = _desc,                          \
-        .doubleOptions = {                             \
-            .minValue = _min,                          \
-            .maxValue = _max,                          \
+        .strOptions = {                                \
+            .optional = true,                          \
+            .oneOf = {NULL},                           \
+            .defaultValue = _default                   \
         }                                              \
-    }
-// Optional option (may optionally be followed by a value)
-#define OPTION_OPTIONAL(_name, _abbr, _desc) \
-    {                                        \
-        .name = _name,                       \
-        .abbr = _abbr,                       \
-        .type = STRING,                      \
-        .description = _desc,                \
-        .strOptions = {                      \
-            .optional = true,                \
-            .oneOf = {NULL},                 \
-        }                                    \
     }
 // "One of" option (may be one of the provided choices)
 #define OPTION_ONEOF(_name, _abbr, _desc, ...) \
@@ -89,18 +105,7 @@ extern "C" {
             .oneOf = {__VA_ARGS__},            \
         }                                      \
     }
-// String option
-#define OPTION_STRING(_name, _abbr, _desc) \
-    {                                      \
-        .name = _name,                     \
-        .abbr = _abbr,                     \
-        .type = STRING,                    \
-        .description = _desc,              \
-        .strOptions = {                    \
-            .optional = false,             \
-            .oneOf = {NULL},               \
-        }                                  \
-    }
+
 // Enum representing the different types of options
 typedef enum {
     END,
@@ -121,14 +126,17 @@ typedef struct {
         struct {
             int32_t minValue;
             int32_t maxValue;
+            int32_t defaultValue;
         } intOptions;
         struct {
             double minValue;
             double maxValue;
+            double defaultValue;
         } doubleOptions;
         struct {
             bool optional;
             char* oneOf[CL_MAX_ONEOF_OPTIONS];
+            char* defaultValue;
         } strOptions;
     };
 } CL_Option;

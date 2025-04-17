@@ -15,9 +15,9 @@ const CL_Schema schema = CL_DEFINESCHEMA(
     OPTION_BOOLEAN("verbose", 'v', "enable verbose output"),
     OPTION_BOOLEAN("round", 'r', "round final value before output"),
     OPTION_ONEOF("mode", 0, "Operation to perform", "add", "sub", "mul", "div"),  // 0 (or '\0') for no shorthand abbreviation
-    OPTION_DOUBLE("xValue", 'x', "First value of operation", 0, 0),
-    OPTION_DOUBLE("yValue", 'y', "Second value of operation", 0, 0),
-    OPTION_INT("power", 'p', "Power to raise the final result to before output", 0, 10),
+    OPTION_DOUBLE("xValue", 'x', "First value of operation", 0, 0, NAN),
+    OPTION_DOUBLE("yValue", 'y', "Second value of operation", 0, 0, NAN),
+    OPTION_INT("power", 'p', "Power to raise the final result to before output", 0, 10, 1),
     OPTION_HELP());
 
 // You can incorporate the default help menu into your custom callback by declaring it like so!
@@ -85,10 +85,6 @@ int main(int argc, char* argv[]) {
 
     Mode mode = getMode(CL_flag("mode", args).string);
     int32_t power = CL_flag("power", args).integer;
-    if (power == INT32_MIN) {
-        power = 1;
-    }
-
     bool roundResult = CL_flag("round", args).boolean;
     bool verbose = CL_flag("verbose", args).boolean;
 

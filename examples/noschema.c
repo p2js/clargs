@@ -14,10 +14,14 @@ int main(int argc, char* argv[]) {
 
     char* mainValue = CL_flag("main", args).string;
 
-    if (mainValue[0] != '\0') {  // If the value has been set (flag has been passed a value)
-        printf("value of --main: %s\n", mainValue);
+    if (mainValue != NULL) {  // If the value has been set (flag has been passed a value)
+        if (mainValue[0] != '\0') {
+            printf("value of --main: %s\n", mainValue);
+        } else {
+            printf("value of --main not set\n");
+        }
     } else {
-        printf("--main value not set\n");
+        printf("--main not passed\n");
     };
 
     printf("===All Options:===\n");
