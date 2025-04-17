@@ -179,7 +179,7 @@ void CL_setParseErrorCallback(CL_ParseErrorCallback cb);
 // Type representing callback function for the help menu (given a schema).
 //
 // Returns true if the program should exit after displaying the help menu
-typedef bool (*CL_HelpCallback)(const CL_Schema schema);
+typedef bool (*CL_HelpCallback)(const CL_Schema schema, const char* progname);
 // Set a custom help menu callback
 void CL_setHelpCallback(CL_HelpCallback cb);
 

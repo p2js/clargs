@@ -27,7 +27,7 @@ void defaultParseErrorCallback(const char* flag, char* msg) {
 }
 
 // Default behaviour for --help (if enabled in schema)
-bool defaultHelpCallback(const CL_Schema schema) {
+bool defaultHelpCallback(const CL_Schema schema, const char* progname) {
     // Compute the maximum spacing needed for aligning flag descriptions
     uint32_t maxSpacingLength = 0;
     for (size_t i = 0; schema[i].type != END; i++) {
@@ -64,6 +64,10 @@ bool defaultHelpCallback(const CL_Schema schema) {
         if (argSpacingLength > maxSpacingLength) {
             maxSpacingLength = argSpacingLength;
         }
+    }
+
+    if (progname) {
+        printf("Usage: %s [values] [options]\n\n", progname);
     }
 
     printf("Options:\n");
@@ -240,7 +244,7 @@ CL_Args CL_parse(int argc, char* argv[], const CL_Schema schema) {
                 char* string_value = "";
                 switch (schema[flag_index].type) {
                     case HELP:
-                        if (helpCallback(schema)) {
+                        if (helpCallback(schema, args.path)) {
                             exit(0);
                         };
                         break;

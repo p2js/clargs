@@ -21,12 +21,12 @@ const CL_Schema schema = CL_DEFINESCHEMA(
     OPTION_HELP());
 
 // You can incorporate the default help menu into your custom callback by declaring it like so!
-extern bool defaultHelpCallback(const CL_Schema schema);
+extern bool defaultHelpCallback(const CL_Schema schema, const char* progname);
 
-bool customHelpCallback(const CL_Schema schema) {
-    printf("Usage: arithmetic [options] x y\n");
-    printf("  Or : arithmetic -x (x) -y (y) [otherOptions]\n\n");
-    defaultHelpCallback(schema);
+bool customHelpCallback(const CL_Schema schema, const char* progname) {
+    printf("Usage: %s x y [options]\n", progname);
+    printf("  Or : %s -x (x) -y (y) [otherOptions]\n\n", progname);
+    defaultHelpCallback(schema, NULL);
     printf("\nExample program for the CLargs library.\nPerforms arithmetic operations on the provided floating point numbers.\n");
     return true;
 }
