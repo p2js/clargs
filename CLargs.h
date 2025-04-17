@@ -23,7 +23,7 @@ extern "C" {
 // SCHEMA DEFINITIONS
 
 // Maximum possibilities for a "one of" option value
-#define CL_MAX_ONEOF_OPTIONS 0xFF
+#define CL_MAX_ONEOF_OPTIONS 0xF
 // Macro to format options into the proper schema (appending end)
 #define CL_DEFINESCHEMA(...) \
     {                        \
@@ -180,7 +180,7 @@ CL_Args CL_parse(int argc, char* argv[], const CL_Schema schema);
 // Get the value of a CL_Args flag
 CL_FlagValue CL_flag(char* flag, CL_Args args);
 // Free the heap allocations of CL_Args object
-void CL_freeArgs(CL_Args args);
+void CL_free(CL_Args args);
 
 #ifdef __cplusplus
 }

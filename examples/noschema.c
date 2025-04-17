@@ -30,4 +30,6 @@ int main(int argc, char* argv[]) {
     for (uint32_t i = 0; i < args.value_count; i++) {
         printf("%s\n", args.values[i]);
     }
+
+    CL_free(args);
 }

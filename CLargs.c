@@ -396,7 +396,7 @@ CL_FlagValue CL_flag(char* flag, CL_Args args) {
     return (CL_FlagValue){.string = ""};
 }
 
-void CL_freeArgs(CL_Args args) {
+void CL_free(CL_Args args) {
     free(args.options);
     free(args.values);
 }

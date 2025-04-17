@@ -18,7 +18,7 @@ There are several different types of options:
 - `OPTION_DOUBLE(name, abbr, description, min, max)` describes a flag that takes a double precision floating-point value, optionally from `min` to `max` (setting both as 0 will accept all options in the range of doubles, with NaN standing in as the value for the option not being set)
 - `OPTION_STRING(name, abbr, description)` describes a flag that takes a string value.
 - `OPTION_OPTIONAL(name, abbr, description)` describes a flag that may optionally be followed by a string value.
-- `OPTION_ONEOF(name, abbr, description, ...)` describes a flag that takes a string value that may be one of the provided possibilities.
+- `OPTION_ONEOF(name, abbr, description, ...)` describes a flag that takes a string value that may be one of the provided possibilities (max 15 by default, but this can be changed in the source code).
 - `OPTION_HELP()` describes the `--help` flag, which can be optionally added to your schema to display all the usage information and description.
 
 The `abbr` field defines an optional single-character flag name to be used as short form (eg `OPTION_BOOLEAN("verbose", 'v', ...)` can be toggled by including either `--verbose` or `-v`). Use the value 0 if you don't want the flag to have an abbreviation.

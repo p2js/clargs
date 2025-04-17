@@ -92,6 +92,9 @@ int main(int argc, char* argv[]) {
     bool roundResult = CL_flag("round", args).boolean;
     bool verbose = CL_flag("verbose", args).boolean;
 
+    // Free args after processing
+    CL_free(args);
+
     if (verbose) {
         char symbol;
         switch (mode) {
